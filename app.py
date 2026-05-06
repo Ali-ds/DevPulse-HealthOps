@@ -60,13 +60,14 @@ def deployment_webhook():
     triggered = data.get('triggered_by','system')
 
     # Structured log — queryable via KQL in AppServiceConsoleLogs
-    app.logger.warning(
+    print(
         f"DEVPULSE_DEPLOYMENT | "
         f"status={status} | "
         f"version={version[:8]} | "
         f"stage={stage} | "
         f"triggered_by={triggered} | "
-        f"timestamp={datetime.utcnow().isoformat()}"
+        f"timestamp={datetime.utcnow().isoformat()}",
+        flush=True
     )
 
     # Fire IT alert on failure
