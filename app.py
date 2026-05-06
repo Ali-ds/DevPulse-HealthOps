@@ -1,6 +1,11 @@
 from flask import Flask, jsonify, request
 from datetime import datetime
 import random, time, math
+from applicationinsights import TelemetryClient
+
+tc = TelemetryClient('5949bebf-7d9a-4cd7-bc99-771dfc747efd')
+
+
 
 app = Flask(__name__)
 
@@ -53,37 +58,19 @@ def ehr_status():
 @app.route('/api/deployment/webhook', methods=['POST'])
 def deployment_webhook():
     data = request.json or {}
-    
-    status    = data.get('status',      'unknown')
-    version   = data.get('version',     'unknown')
-    stage     = data.get('stage',       'unknown')
-    triggered = data.get('triggered_by','system')
+    status  = data.get('status',  'unknown')
+    version = data.get('version', 'unknown')
 
-    # Structured log — queryable via KQL in AppServiceConsoleLogs
-    print(
-        f"DEVPULSE_DEPLOYMENT | "
-        f"status={status} | "
-        f"version={version[:8]} | "
-        f"stage={stage} | "
-        f"triggered_by={triggered} | "
-        f"timestamp={datetime.utcnow().isoformat()}",
-        flush=True
-    )
-
-    # Fire IT alert on failure
-    if status == 'failed':
-        app.logger.error(
-            f"DEVPULSE_ALERT | severity=critical | "
-            f"message=Deployment failed for version {version[:8]} | "
-            f"action=rollback_required"
-        )
-
-    return jsonify({
-        "received":  True,
-        "status":    status,
-        "version":   version[:8],
-        "timestamp": datetime.utcnow().isoformat()
+    # Send custom event to App Insights
+    tc.track_event('DEVPULSE_DEPLOYMENT', {
+        'status':  status,
+        'version': version[:8],
+        'stage':   data.get('stage', 'unknown')
     })
+    tc.flush()
+
+    return jsonify({"received": True, "status": status})
+
 # Database latency simulation (mentioned in problem statement)
 @app.route('/api/db/query')
 def db_query():
