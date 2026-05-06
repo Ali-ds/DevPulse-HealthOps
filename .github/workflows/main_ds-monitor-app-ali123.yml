@@ -85,13 +85,18 @@ jobs:
         id: deploy
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'ds-monitor-app-YOUR_INITIALS'
+          app-name: 'ds-monitor-app-ali123'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
         continue-on-error: true
 
+      - name: Wait for app to restart
+        run: sleep 30
+        
+
       # Notify DevPulse — deployment success or failure
       - name: Notify deployment result
+        continue-on-error: true
         run: |
           STATUS="${{ steps.deploy.outcome == 'success' && 'success' || 'failed' }}"
           curl -X POST ${{ secrets.DEVPULSE_WEBHOOK_URL }}/api/deployment/webhook \
@@ -102,6 +107,7 @@ jobs:
             "stage": "deploy",
             "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
           }'
+          
 
       - name: Fail if deployment failed
         if: steps.deploy.outcome == 'failure'
