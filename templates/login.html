@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DevPulse HealthOps — Login</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1a3c5e, #0d7377);
+      height: 100vh; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .login-box {
+      background: white; border-radius: 12px;
+      padding: 40px; width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .logo { text-align: center; margin-bottom: 28px; }
+    .logo h1 { color: #1a3c5e; font-size: 24px; }
+    .logo p  { color: #666; font-size: 13px; margin-top: 4px; }
+    .logo .cross { font-size: 40px; color: #e74c3c; }
+    label { font-size: 13px; color: #555; font-weight: 600; }
+    input {
+      width: 100%; padding: 10px 12px; margin: 6px 0 16px;
+      border: 1px solid #ddd; border-radius: 6px; font-size: 14px;
+    }
+    input:focus { outline: none; border-color: #0d7377; }
+    button {
+      width: 100%; padding: 12px;
+      background: #0d7377; color: white;
+      border: none; border-radius: 6px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    button:hover { background: #1a3c5e; }
+    .footer { text-align: center; margin-top: 20px;
+              font-size: 11px; color: #999; }
+    .badge {
+      display: inline-block; background: #e8f5e9;
+      color: #2e7d32; padding: 4px 10px;
+      border-radius: 20px; font-size: 11px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="logo">
+      <div class="cross">✚</div>
+      <h1>DevPulse HealthOps</h1>
+      <p>Healthcare IT Infrastructure Monitor</p>
+      <br>
+      <span class="badge">🔒 HIPAA Compliant System</span>
+    </div>
+    <label>Staff ID</label>
+    <input type="text" placeholder="Enter your staff ID" value="admin">
+    <label>Password</label>
+    <input type="password" placeholder="Enter password" value="••••••••">
+    <button onclick="window.location.href='/dashboard'">
+      Sign In to EHR System
+    </button>
+    <div class="footer">
+      City General Hospital · IT Infrastructure Portal<br>
+      Powered by Azure Monitor + DevPulse
+    </div>
+  </div>
+</body>
+</html>

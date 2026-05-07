@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DevPulse HealthOps — EHR Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Arial, sans-serif; background:#f0f4f8; color:#2d3748; }
+
+    /* HEADER */
+    .header {
+      background: #1a3c5e; color: white;
+      padding: 14px 28px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .header .logo { font-size: 20px; font-weight: 700; }
+    .header .logo span { color: #4fc3f7; }
+    .header .subtitle { font-size: 12px; color: #90caf9; }
+    .header .right { margin-left: auto; display:flex; gap:20px; align-items:center; }
+    .live-badge {
+      background: #e8f5e9; color: #2e7d32;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dot { width:8px; height:8px; border-radius:50%;
+           background:#2e7d32; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .time { font-size: 13px; color: #90caf9; }
+
+    /* NAV */
+    .nav {
+      background: #0d2137; padding: 0 28px;
+      display: flex; gap: 4px;
+    }
+    .nav a {
+      color: #90caf9; text-decoration: none;
+      padding: 10px 16px; font-size: 13px;
+      border-bottom: 3px solid transparent;
+    }
+    .nav a.active { color: white; border-bottom-color: #4fc3f7; }
+
+    /* ALERT BANNER */
+    .alert-banner {
+      background: #fff3cd; border-left: 4px solid #f39c12;
+      padding: 10px 28px; font-size: 13px;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    /* MAIN */
+    .main { padding: 20px 28px; }
+
+    /* KPI CARDS */
+    .cards {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 14px; margin-bottom: 20px;
+    }
+    .card {
+      background: white; border-radius: 10px;
+      padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-top: 4px solid #1a3c5e;
+    }
+    .card.green  { border-top-color: #27ae60; }
+    .card.red    { border-top-color: #e74c3c; }
+    .card.orange { border-top-color: #f39c12; }
+    .card.blue   { border-top-color: #2980b9; }
+    .card .label { font-size: 11px; color: #888;
+                   text-transform: uppercase; letter-spacing: 0.5px; }
+    .card .value { font-size: 26px; font-weight: 700;
+                   margin: 6px 0 2px; color: #2d3748; }
+    .card .sub   { font-size: 11px; color: #aaa; }
+
+    /* GRID */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr;
+               gap: 16px; margin-bottom: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr;
+               gap: 16px; margin-bottom: 16px; }
+
+    /* CHART CARDS */
+    .chart-card {
+      background: white; border-radius: 10px; padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .chart-card h3 {
+      font-size: 13px; font-weight: 600; color: #555;
+      margin-bottom: 14px; text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    canvas { max-height: 200px; }
+
+    /* STATUS TABLE */
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { background:#f8fafc; padding:8px 12px; text-align:left;
+         color:#666; font-weight:600; border-bottom:2px solid #eee; }
+    td { padding:8px 12px; border-bottom:1px solid #f0f0f0; }
+    .status-ok  { color:#27ae60; font-weight:600; }
+    .status-warn{ color:#f39c12; font-weight:600; }
+    .status-err { color:#e74c3c; font-weight:600; }
+
+    /* INCIDENT TIMELINE */
+    .timeline { list-style:none; }
+    .timeline li {
+      padding: 10px 0; border-bottom: 1px solid #f0f0f0;
+      display: flex; gap: 12px; align-items: flex-start;
+      font-size: 13px;
+    }
+    .ttime { color:#888; font-size:11px; white-space:nowrap; min-width:80px; }
+    .tbadge {
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; font-weight: 600; white-space:nowrap;
+    }
+    .tbadge.critical { background:#fde8e8; color:#e74c3c; }
+    .tbadge.warning  { background:#fff3cd; color:#f39c12; }
+    .tbadge.ok       { background:#e8f5e9; color:#27ae60; }
+    .tbadge.info     { background:#e3f2fd; color:#1976d2; }
+
+    .footer {
+      text-align:center; padding:16px;
+      font-size:11px; color:#aaa;
+      border-top: 1px solid #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="logo">✚ DevPulse <span>HealthOps</span></div>
+    <div class="subtitle">City General Hospital — IT Infrastructure Monitor</div>
+  </div>
+  <div class="right">
+    <div class="live-badge"><div class="dot"></div> LIVE</div>
+    <div class="time" id="clock"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <a href="#" class="active">Overview</a>
+  <a href="#">EHR Systems</a>
+  <a href="#">CI/CD Pipeline</a>
+  <a href="#">Security</a>
+  <a href="#">Alerts</a>
+</div>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alert-banner" style="display:none">
+  ⚠️ <strong>Active Alert:</strong>
+  <span id="alert-text">EHR API latency spike detected</span>
+</div>
+
+<div class="main">
+
+  <!-- KPI CARDS -->
+  <div class="cards">
+    <div class="card green">
+      <div class="label">EHR Uptime</div>
+      <div class="value" id="kpi-uptime">--</div>
+      <div class="sub">Last 24 hours</div>
+    </div>
+    <div class="card blue">
+      <div class="label">API Response</div>
+      <div class="value" id="kpi-latency">--</div>
+      <div class="sub">Avg ms</div>
+    </div>
+    <div class="card orange">
+      <div class="label">DB Latency</div>
+      <div class="value" id="kpi-db">--</div>
+      <div class="sub">Avg ms</div>
+    </div>
+    <div class="card red">
+      <div class="label">Active Alerts</div>
+      <div class="value" id="kpi-alerts">--</div>
+      <div class="sub">Requires attention</div>
+    </div>
+    <div class="card">
+      <div class="label">Appointments</div>
+      <div class="value" id="kpi-appointments">--</div>
+      <div class="sub">Scheduled today</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>Patient API Response Time (ms)</h3>
+      <canvas id="chart-latency"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>HTTP Requests vs Errors</h3>
+      <canvas id="chart-requests"></canvas>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="grid-3">
+    <div class="chart-card">
+      <h3>Database Query Latency</h3>
+      <canvas id="chart-db"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Emergency Traffic Volume</h3>
+      <canvas id="chart-emergency"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>CI/CD Pipeline Status</h3>
+      <canvas id="chart-pipeline"></canvas>
+    </div>
+  </div>
+
+  <!-- SYSTEM STATUS + INCIDENT TIMELINE -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>System Status</h3>
+      <table>
+        <tr>
+          <th>System</th><th>Status</th><th>Latency</th><th>Uptime</th>
+        </tr>
+        <tr>
+          <td>EHR Core</td>
+          <td><span class="status-ok" id="s-ehr">● Online</span></td>
+          <td id="l-ehr">--</td><td>99.7%</td>
+        </tr>
+        <tr>
+          <td>Patient Records API</td>
+          <td><span class="status-ok" id="s-api">● Online</span></td>
+          <td id="l-api">--</td><td>99.9%</td>
+        </tr>
+        <tr>
+          <td>Database</td>
+          <td><span class="status-ok" id="s-db">● Online</span></td>
+          <td id="l-db">--</td><td>100%</td>
+        </tr>
+        <tr>
+          <td>Appointment System</td>
+          <td><span class="status-ok" id="s-apt">● Online</span></td>
+          <td id="l-apt">--</td><td>99.5%</td>
+        </tr>
+        <tr>
+          <td>CI/CD Pipeline</td>
+          <td><span class="status-ok" id="s-cicd">● Passing</span></td>
+          <td>--</td><td>--</td>
+        </tr>
+      </table>
+    </div>
+    <div class="chart-card">
+      <h3>Incident Timeline</h3>
+      <ul class="timeline" id="timeline">
+        <li>
+          <span class="ttime">Loading...</span>
+          <span class="tbadge info">INFO</span>
+          <span>Fetching incident data...</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  DevPulse HealthOps · City General Hospital · Powered by Azure Monitor + ML
+  · Auto-refreshes every 30s
+</div>
+
+<script>
+  // Clock
+  setInterval(() => {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString();
+  }, 1000);
+
+  // Charts
+  Chart.defaults.color = '#888';
+  Chart.defaults.borderColor = '#f0f0f0';
+
+  function lineChart(id, label, color) {
+    return new Chart(document.getElementById(id), {
+      type: 'line',
+      data: { labels: [], datasets: [{
+        label, data: [], borderColor: color,
+        backgroundColor: color + '20',
+        borderWidth: 2, pointRadius: 2, fill: true, tension: 0.4
+      }]},
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { maxTicksLimit: 5, maxRotation: 0 } },
+          y: { beginAtZero: false }
+        }
+      }
+    });
+  }
+
+  const charts = {
+    latency:   lineChart('chart-latency',   'Response ms', '#2980b9'),
+    db:        lineChart('chart-db',        'DB ms',       '#8e44ad'),
+    emergency: lineChart('chart-emergency', 'Requests',    '#e74c3c'),
+    requests: new Chart(document.getElementById('chart-requests'), {
+      type: 'bar',
+      data: { labels: [], datasets: [
+        { label:'Total',  data:[], backgroundColor:'#2980b920',
+          borderColor:'#2980b9', borderWidth:1 },
+        { label:'Errors', data:[], backgroundColor:'#e74c3c20',
+          borderColor:'#e74c3c', borderWidth:1 }
+      ]},
+      options: { responsive:true, maintainAspectRatio:true,
+        scales: { x:{ ticks:{ maxTicksLimit:5 } } } }
+    }),
+    pipeline: new Chart(document.getElementById('chart-pipeline'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Success','Failed','Rollback'],
+        datasets:[{ data:[0,0,0],
+          backgroundColor:['#27ae60','#e74c3c','#f39c12'],
+          borderWidth:0 }]
+      },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+    })
+  };
+
+  function update(chart, labels, data, idx=0) {
+    chart.data.labels = labels.slice(-20);
+    chart.data.datasets[idx].data = data.slice(-20);
+    chart.update('none');
+  }
+
+  async function fetchAll() {
+    try {
+      // Health summary → KPI cards
+      const h = await fetch('/api/health/summary').then(r=>r.json());
+      document.getElementById('kpi-uptime').textContent =
+        h.uptime_pct + '%';
+      document.getElementById('kpi-latency').textContent =
+        Math.round(h.api_latency_ms) + 'ms';
+      document.getElementById('kpi-db').textContent =
+        Math.round(h.db_latency_ms) + 'ms';
+      document.getElementById('kpi-alerts').textContent =
+        h.active_alerts;
+
+      // Update status table
+      document.getElementById('l-ehr').textContent =
+        Math.round(h.api_latency_ms) + 'ms';
+      document.getElementById('l-api').textContent =
+        Math.round(h.api_latency_ms) + 'ms';
+      document.getElementById('l-db').textContent =
+        Math.round(h.db_latency_ms) + 'ms';
+
+      // Show alert banner if active alerts
+      const banner = document.getElementById('alert-banner');
+      if (h.active_alerts > 0) {
+        banner.style.display = 'flex';
+        document.getElementById('alert-text').textContent =
+          `${h.active_alerts} active alert(s) — check Azure Monitor`;
+      } else {
+        banner.style.display = 'none';
+      }
+
+      // Appointments
+      const apt = await fetch('/api/appointments').then(r=>r.json());
+      document.getElementById('kpi-appointments').textContent =
+        apt.scheduled;
+      document.getElementById('l-apt').textContent = '~120ms';
+
+      // Patient records latency chart
+      const pr = await fetch('/api/patient/records').then(r=>r.json());
+      const now = new Date().toLocaleTimeString();
+      charts.latency.data.labels.push(now);
+      charts.latency.data.datasets[0].data.push(pr.latency_ms);
+      if (charts.latency.data.labels.length > 20) {
+        charts.latency.data.labels.shift();
+        charts.latency.data.datasets[0].data.shift();
+      }
+      charts.latency.update('none');
+
+      // DB latency chart
+      const db = await fetch('/api/db/query').then(r=>r.json());
+      charts.db.data.labels.push(now);
+      charts.db.data.datasets[0].data.push(db.query_time_ms);
+      if (charts.db.data.labels.length > 20) {
+        charts.db.data.labels.shift();
+        charts.db.data.datasets[0].data.shift();
+      }
+      charts.db.update('none');
+
+      // Update incident timeline
+      updateTimeline(h);
+
+    } catch(e) { console.error('Fetch error:', e); }
+  }
+
+  function updateTimeline(h) {
+    const now = new Date().toLocaleTimeString();
+    const items = [];
+
+    if (h.active_alerts > 0) {
+      items.push({ time: now, badge: 'critical', text: 'Active alert detected — EHR system requires attention' });
+    }
+    if (h.api_latency_ms > 500) {
+      items.push({ time: now, badge: 'warning', text: `API latency elevated: ${Math.round(h.api_latency_ms)}ms` });
+    }
+    if (h.api_latency_ms <= 500) {
+      items.push({ time: now, badge: 'ok', text: 'All EHR systems operating normally' });
+    }
+    items.push({ time: now, badge: 'info', text: 'DevPulse health check completed' });
+
+    document.getElementById('timeline').innerHTML = items.map(i => `
+      <li>
+        <span class="ttime">${i.time}</span>
+        <span class="tbadge ${i.badge}">${i.badge.toUpperCase()}</span>
+        <span>${i.text}</span>
+      </li>
+    `).join('');
+  }
+
+  fetchAll();
+  setInterval(fetchAll, 30000);
+</script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from flask import render_template
 from datetime import datetime
 import random, time, math
 from applicationinsights import TelemetryClient
@@ -10,8 +11,13 @@ tc = TelemetryClient('5949bebf-7d9a-4cd7-bc99-771dfc747efd')
 app = Flask(__name__)
 
 @app.route('/')
-def home():
-    return jsonify({"status": "running", "message": "DS Monitor App"})
+def login():
+    return render_template('login.html')
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template('ehr_dashboard.html')
+
 
 @app.route('/load')
 def generate_load():
@@ -40,6 +46,7 @@ def patient_records():
     latency = random.uniform(0.05, 0.3)
     time.sleep(latency)
     return jsonify({"status": "ok", "records": 142, "latency_ms": latency*1000})
+
 
 @app.route('/api/patient/emergency')
 def emergency_traffic():
