@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CityGeneral EHR — Emergency Queue</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root{--navy:#0a1628;--blue:#1e40af;--sky:#3b82f6;--white:#fff;--gray:#64748b;--border:#e2e8f0;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--bg:#f8fafc;--sidebar:220px;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1e293b;display:flex;min-height:100vh;}
+    .sidebar{width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;}
+    .sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .sidebar-logo .cross{width:36px;height:36px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;margin-bottom:10px;}
+    .sidebar-logo h1{font-family:'DM Serif Display',serif;font-size:16px;color:white;line-height:1.2;}
+    .sidebar-logo p{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;letter-spacing:.5px;}
+    .nav-section{padding:16px 0;}
+    .nav-label{font-size:10px;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px;padding:0 20px;margin-bottom:6px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .2s;border-left:3px solid transparent;text-decoration:none;}
+    .nav-item:hover{color:white;background:rgba(255,255,255,.05);}
+    .nav-item.active{color:white;background:rgba(59,130,246,.15);border-left-color:var(--sky);}
+    .nav-item .icon{font-size:16px;width:20px;text-align:center;}
+    .nav-item .badge{margin-left:auto;background:var(--red);color:white;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;}
+    .nav-item .badge.green{background:var(--green);}
+    .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);}
+    .user-card{display:flex;align-items:center;gap:10px;}
+    .avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--sky),#0d9488);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
+    .user-info .name{font-size:13px;color:white;font-weight:500;}
+    .user-info .role{font-size:11px;color:rgba(255,255,255,.4);}
+    .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+    .topbar{background:white;border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:40;}
+    .topbar h2{font-size:16px;font-weight:600;color:var(--navy);}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+    .btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all .2s;}
+    .btn-danger{background:var(--red);color:white;}
+    .content{padding:24px 28px;flex:1;}
+
+    /* EMERGENCY */
+    .eq-banner{background:linear-gradient(135deg,#7f1d1d,#dc2626);border-radius:12px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:20px;color:white;}
+    .eq-banner .pulse-icon{width:48px;height:48px;background:rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;animation:beat 1s infinite;}
+    @keyframes beat{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+    .eq-banner h3{font-size:18px;font-weight:700;}
+    .eq-banner p{font-size:13px;opacity:.8;margin-top:2px;}
+    .eq-stats{display:flex;gap:24px;margin-left:auto;}
+    .eq-stat{text-align:center;}
+    .eq-stat .n{font-size:24px;font-weight:700;}
+    .eq-stat .l{font-size:11px;opacity:.7;}
+
+    .queue-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;}
+    .card{background:white;border-radius:10px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);}
+    .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .card-header h3{font-size:14px;font-weight:600;color:var(--navy);}
+
+    .eq-row{padding:16px 20px;border-bottom:1px solid #f1f5f9;display:grid;grid-template-columns:auto 1fr auto auto;gap:16px;align-items:center;}
+    .eq-row:last-child{border-bottom:none;}
+    .eq-row:hover{background:#fafbfc;}
+    .priority-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+    .p1{background:#fef2f2;color:#dc2626;}
+    .p2{background:#fff7ed;color:#ea580c;}
+    .p3{background:#fefce8;color:#ca8a04;}
+    .p4{background:#f0fdf4;color:#16a34a;}
+    .eq-info .name{font-size:14px;font-weight:600;color:var(--navy);}
+    .eq-info .complaint{font-size:12px;color:var(--gray);margin-top:2px;}
+    .eq-info .tags{display:flex;gap:6px;margin-top:6px;}
+    .tag{padding:2px 8px;background:var(--bg);border-radius:4px;font-size:11px;color:var(--gray);border:1px solid var(--border);}
+    .eq-wait{text-align:center;}
+    .eq-wait .mins{font-size:18px;font-weight:700;color:var(--navy);}
+    .eq-wait .wlbl{font-size:10px;color:var(--gray);}
+    .eq-actions{display:flex;gap:6px;}
+    .eq-btn{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;}
+    .eq-btn.primary{background:var(--blue);color:white;}
+    .eq-btn.secondary{background:var(--bg);color:var(--navy);border:1px solid var(--border);}
+
+    /* BED MAP */
+    .bed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px;}
+    .bed{border-radius:8px;padding:10px;font-size:11px;text-align:center;border:1px solid;}
+    .bed .bnum{font-weight:700;font-size:13px;margin-bottom:2px;}
+    .bed.occupied{background:#fef2f2;border-color:#fecaca;color:#991b1b;}
+    .bed.available{background:#f0fdf4;border-color:#bbf7d0;color:#166534;}
+    .bed.cleaning{background:#fff7ed;border-color:#fed7aa;color:#9a3412;}
+
+    .footer{background:white;border-top:1px solid var(--border);padding:12px 28px;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;}
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="cross">✚</div>
+    <h1>CityGeneral<br>Hospital EHR</h1>
+    <p>CLINICAL INFORMATION SYSTEM</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Clinical</div>
+    <a href="/dashboard" class="nav-item"><span class="icon">🏠</span> Overview</a>
+    <a href="/patients" class="nav-item"><span class="icon">👥</span> Patient Records<span class="badge green">247</span></a>
+    <a href="/emergency" class="nav-item active"><span class="icon">🚨</span> Emergency Queue<span class="badge">12</span></a>
+    <a href="/appointments" class="nav-item"><span class="icon">📅</span> Appointments</a>
+    <a href="/lab" class="nav-item"><span class="icon">🔬</span> Lab Results<span class="badge">5</span></a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Clinical Tools</div>
+    <a href="#" class="nav-item"><span class="icon">💊</span> Medications</a>
+    <a href="#" class="nav-item"><span class="icon">🩻</span> Radiology</a>
+    <a href="#" class="nav-item"><span class="icon">📝</span> Clinical Notes</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">JS</div>
+      <div class="user-info"><div class="name">Dr. James Smith</div><div class="role">Emergency Medicine</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><div style="font-size:11px;color:var(--gray)">EHR / Emergency</div><h2>Emergency Queue</h2></div>
+    <div class="topbar-right">
+      <div style="font-size:13px;color:var(--gray)">Live · <span id="clock"></span></div>
+      <button class="btn btn-danger">+ Register Patient</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <div class="eq-banner">
+      <div class="pulse-icon">🚨</div>
+      <div>
+        <h3>Emergency Department — Active</h3>
+        <p>2 critical patients require immediate attention</p>
+      </div>
+      <div class="eq-stats">
+        <div class="eq-stat"><div class="n">12</div><div class="l">In Queue</div></div>
+        <div class="eq-stat"><div class="n">2</div><div class="l">Critical</div></div>
+        <div class="eq-stat"><div class="n">34m</div><div class="l">Avg Wait</div></div>
+        <div class="eq-stat"><div class="n">6/8</div><div class="l">Beds Used</div></div>
+      </div>
+    </div>
+
+    <div class="queue-grid">
+      <div class="card">
+        <div class="card-header"><h3>Patient Queue — Sorted by Priority</h3><span style="font-size:12px;color:var(--gray)">Auto-updates every 60s</span></div>
+        <div id="queue"></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><h3>🛏 Emergency Bed Status</h3></div>
+          <div class="bed-grid">
+            <div class="bed occupied"><div class="bnum">Bed 1</div>P-4826 · Critical</div>
+            <div class="bed occupied"><div class="bnum">Bed 2</div>P-4831 · Critical</div>
+            <div class="bed occupied"><div class="bnum">Bed 3</div>P-4832 · Moderate</div>
+            <div class="bed occupied"><div class="bnum">Bed 4</div>P-4833 · Stable</div>
+            <div class="bed cleaning"><div class="bnum">Bed 5</div>Cleaning</div>
+            <div class="bed occupied"><div class="bnum">Bed 6</div>P-4835 · Stable</div>
+            <div class="bed available"><div class="bnum">Bed 7</div>Available</div>
+            <div class="bed available"><div class="bnum">Bed 8</div>Available</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>📊 Dept Stats Today</h3></div>
+          <div style="padding:16px">
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px"><span style="color:var(--gray)">Total Arrivals</span><strong>47</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px"><span style="color:var(--gray)">Discharged</span><strong>31</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px"><span style="color:var(--gray)">Admitted</span><strong>4</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px"><span style="color:var(--gray)">Avg Treatment Time</span><strong>2h 14m</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px"><span style="color:var(--gray)">Patient Satisfaction</span><strong style="color:var(--green)">94%</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <span>CityGeneral Hospital EHR v4.2.1 · Emergency Department Module</span>
+    <span>Monitored by DevPulse HealthOps · Azure Monitor Active</span>
+  </div>
+</div>
+
+<script>
+  setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString();},1000);
+  document.getElementById('clock').textContent=new Date().toLocaleTimeString();
+
+  const patients=[
+    {p:"p1",label:"P1 — Critical",name:"Ahmed Hassan, 54M",complaint:"Severe chest pain, diaphoresis, possible STEMI",wait:4,tags:["ECG","Troponin","Cardiology"],assigned:"Dr. Smith"},
+    {p:"p1",label:"P1 — Critical",name:"Lisa Park, 8F",complaint:"High fever 40.2°C, history of febrile seizures",wait:6,tags:["Paeds","CBC","Blood Culture"],assigned:"Dr. Khan"},
+    {p:"p2",label:"P2 — Urgent",name:"David Moore, 67M",complaint:"Shortness of breath, SpO2 88%, bilateral wheeze",wait:12,tags:["O2","Chest X-Ray","ABG"],assigned:"Dr. Williams"},
+    {p:"p2",label:"P2 — Urgent",name:"Fatima Al-Rashid, 34F",complaint:"Acute abdominal pain, RLQ tenderness, nausea",wait:18,tags:["US Abdomen","CBC","Surgical"],assigned:"Unassigned"},
+    {p:"p2",label:"P2 — Urgent",name:"George Walton, 78M",complaint:"Sudden vision loss, left eye, 20 minutes ago",wait:22,tags:["Ophthalmology","STAT"],assigned:"Dr. Patel"},
+    {p:"p3",label:"P3 — Less Urgent",name:"Tom Baker, 29M",complaint:"Laceration right forearm, bleeding controlled",wait:35,tags:["Wound Care"],assigned:"Nurse Chen"},
+    {p:"p3",label:"P3 — Less Urgent",name:"Mary Johnson, 55F",complaint:"Migraine, severity 8/10, vomiting",wait:40,tags:["Neurology","IV Fluids"],assigned:"Dr. Smith"},
+    {p:"p4",label:"P4 — Non-Urgent",name:"Nancy White, 45F",complaint:"Mild allergic reaction, hives on arms",wait:52,tags:["Antihistamine"],assigned:"Nurse Ali"},
+  ];
+
+  const q=document.getElementById('queue');
+  patients.forEach(p=>{
+    q.innerHTML+=`<div class="eq-row">
+      <span class="priority-badge ${p.p}">${p.label}</span>
+      <div class="eq-info">
+        <div class="name">${p.name}</div>
+        <div class="complaint">${p.complaint}</div>
+        <div class="tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}<span class="tag">👨‍⚕️ ${p.assigned}</span></div>
+      </div>
+      <div class="eq-wait"><div class="mins">${p.wait}m</div><div class="wlbl">waiting</div></div>
+      <div class="eq-actions">
+        <button class="eq-btn primary">Assess</button>
+        <button class="eq-btn secondary">Notes</button>
+      </div>
+    </div>`;
+  });
+</script>
+</body>
+</html>

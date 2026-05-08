@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CityGeneral EHR — Patient Records</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root{--navy:#0a1628;--blue:#1e40af;--sky:#3b82f6;--teal:#0d9488;--white:#fff;--gray:#64748b;--border:#e2e8f0;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--bg:#f8fafc;--sidebar:220px;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1e293b;display:flex;min-height:100vh;}
+    .sidebar{width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;}
+    .sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .sidebar-logo .cross{width:36px;height:36px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;margin-bottom:10px;}
+    .sidebar-logo h1{font-family:'DM Serif Display',serif;font-size:16px;color:white;line-height:1.2;}
+    .sidebar-logo p{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;letter-spacing:.5px;}
+    .nav-section{padding:16px 0;}
+    .nav-label{font-size:10px;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px;padding:0 20px;margin-bottom:6px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .2s;border-left:3px solid transparent;text-decoration:none;}
+    .nav-item:hover{color:white;background:rgba(255,255,255,.05);}
+    .nav-item.active{color:white;background:rgba(59,130,246,.15);border-left-color:var(--sky);}
+    .nav-item .icon{font-size:16px;width:20px;text-align:center;}
+    .nav-item .badge{margin-left:auto;background:var(--red);color:white;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;}
+    .nav-item .badge.green{background:var(--green);}
+    .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);}
+    .user-card{display:flex;align-items:center;gap:10px;}
+    .avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--sky),var(--teal));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
+    .user-info .name{font-size:13px;color:white;font-weight:500;}
+    .user-info .role{font-size:11px;color:rgba(255,255,255,.4);}
+    .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+    .topbar{background:white;border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:40;}
+    .topbar h2{font-size:16px;font-weight:600;color:var(--navy);}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+    .search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;color:var(--gray);width:280px;}
+    .btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+    .btn-primary{background:var(--blue);color:white;border:none;}
+    .btn-primary:hover{background:#1d4ed8;}
+    .content{padding:24px 28px;flex:1;}
+    .filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+    .filter-btn{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--gray);font-family:'DM Sans',sans-serif;transition:all .2s;}
+    .filter-btn.active{background:var(--blue);color:white;border-color:var(--blue);}
+    .filter-btn:hover:not(.active){border-color:var(--sky);color:var(--sky);}
+    .card{background:white;border-radius:10px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th{padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;background:#fafbfc;border-bottom:1px solid var(--border);}
+    td{padding:14px 16px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:#fafbfc;cursor:pointer;}
+    .patient-info{display:flex;align-items:center;gap:10px;}
+    .patient-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0;}
+    .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+    .pill.critical{background:#fef2f2;color:#dc2626;}
+    .pill.stable{background:#f0fdf4;color:#16a34a;}
+    .pill.moderate{background:#fff7ed;color:#ea580c;}
+    .pill.observation{background:#eff6ff;color:#1d4ed8;}
+    .pill.discharged{background:#f1f5f9;color:#64748b;}
+    .action-btns{display:flex;gap:8px;}
+    .icon-btn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
+    .icon-btn:hover{background:var(--bg);border-color:var(--sky);}
+    .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+    .mini-stat{background:white;border-radius:10px;padding:16px;border:1px solid var(--border);text-align:center;}
+    .mini-stat .n{font-size:24px;font-weight:700;color:var(--navy);}
+    .mini-stat .l{font-size:11px;color:var(--gray);margin-top:2px;}
+    .footer{background:white;border-top:1px solid var(--border);padding:12px 28px;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;}
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="cross">✚</div>
+    <h1>CityGeneral<br>Hospital EHR</h1>
+    <p>CLINICAL INFORMATION SYSTEM</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Clinical</div>
+    <a href="/dashboard" class="nav-item"><span class="icon">🏠</span> Overview</a>
+    <a href="/patients" class="nav-item active"><span class="icon">👥</span> Patient Records<span class="badge green">247</span></a>
+    <a href="/emergency" class="nav-item"><span class="icon">🚨</span> Emergency Queue<span class="badge">12</span></a>
+    <a href="/appointments" class="nav-item"><span class="icon">📅</span> Appointments</a>
+    <a href="/lab" class="nav-item"><span class="icon">🔬</span> Lab Results<span class="badge">5</span></a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Clinical Tools</div>
+    <a href="#" class="nav-item"><span class="icon">💊</span> Medications</a>
+    <a href="#" class="nav-item"><span class="icon">🩻</span> Radiology</a>
+    <a href="#" class="nav-item"><span class="icon">📝</span> Clinical Notes</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">JS</div>
+      <div class="user-info"><div class="name">Dr. James Smith</div><div class="role">Emergency Medicine</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><div style="font-size:11px;color:var(--gray)">EHR / Patient Records</div><h2>Patient Records</h2></div>
+    <div class="topbar-right">
+      <div class="search-box">🔍 Search by name, ID, condition...</div>
+      <button class="btn btn-primary">+ Admit New Patient</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="stats-row">
+      <div class="mini-stat"><div class="n">247</div><div class="l">Total Inpatients</div></div>
+      <div class="mini-stat"><div class="n" style="color:var(--red)">8</div><div class="l">Critical</div></div>
+      <div class="mini-stat"><div class="n" style="color:var(--orange)">23</div><div class="l">Moderate</div></div>
+      <div class="mini-stat"><div class="n" style="color:var(--green)">198</div><div class="l">Stable</div></div>
+      <div class="mini-stat"><div class="n">18</div><div class="l">Discharged Today</div></div>
+    </div>
+    <div class="filters">
+      <button class="filter-btn active">All Patients</button>
+      <button class="filter-btn">Critical</button>
+      <button class="filter-btn">ICU</button>
+      <button class="filter-btn">Emergency</button>
+      <button class="filter-btn">General Ward</button>
+      <button class="filter-btn">Pediatrics</button>
+      <button class="filter-btn">Oncology</button>
+      <button class="filter-btn">Maternity</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>Patient</th><th>Age/Sex</th><th>Ward / Bed</th><th>Diagnosis</th><th>Attending Physician</th><th>Admitted</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="ptable"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="footer">
+    <span>CityGeneral Hospital EHR v4.2.1 · Patient Records Module</span>
+    <span>Showing 20 of 247 patients · Last updated: <span id="ts"></span></span>
+  </div>
+</div>
+
+<script>
+  document.getElementById('ts').textContent = new Date().toLocaleTimeString();
+  const data=[
+    {name:"Sarah Mitchell",id:"P-4821",init:"SM",col:"#3b82f6",age:"52F",ward:"ICU — Bed 14",dx:"Cardiac Arrest Recovery",doc:"Dr. R. Patel",admitted:"May 5, 2026",status:"critical"},
+    {name:"Robert Chen",id:"P-4822",init:"RC",col:"#0d9488",age:"38M",ward:"General — Ward B, Bed 3",dx:"Post-Op Recovery (Appendectomy)",doc:"Dr. S. Williams",admitted:"May 6, 2026",status:"stable"},
+    {name:"Maria Garcia",id:"P-4823",init:"MG",col:"#7c3aed",age:"7F",ward:"Pediatrics — Bed 2",dx:"Community-Acquired Pneumonia",doc:"Dr. A. Khan",admitted:"May 5, 2026",status:"moderate"},
+    {name:"James Wilson",id:"P-4824",init:"JW",col:"#ea580c",age:"61M",ward:"Oncology — Bed 8",dx:"Non-Hodgkin Lymphoma, Cycle 3",doc:"Dr. Y. Lee",admitted:"May 3, 2026",status:"observation"},
+    {name:"Emma Thompson",id:"P-4825",init:"ET",col:"#16a34a",age:"29F",ward:"Maternity — Bed 1",dx:"Post-Delivery Monitoring",doc:"Dr. L. Nguyen",admitted:"May 7, 2026",status:"stable"},
+    {name:"Ahmed Hassan",id:"P-4826",init:"AH",col:"#dc2626",age:"54M",ward:"Emergency — Bed 1",dx:"Acute Myocardial Infarction",doc:"Dr. J. Smith",admitted:"May 8, 2026",status:"critical"},
+    {name:"Linda Foster",id:"P-4827",init:"LF",col:"#0891b2",age:"45F",ward:"General — Ward A, Bed 7",dx:"Type 2 Diabetes, Hyperglycemia",doc:"Dr. M. Okonkwo",admitted:"May 4, 2026",status:"stable"},
+    {name:"Peter Nguyen",id:"P-4828",init:"PN",col:"#be185d",age:"72M",ward:"Cardiology — Bed 5",dx:"Congestive Heart Failure",doc:"Dr. R. Patel",admitted:"May 2, 2026",status:"moderate"},
+    {name:"Grace Kim",id:"P-4829",init:"GK",col:"#65a30d",age:"14F",ward:"Pediatrics — Bed 5",dx:"Asthma Exacerbation",doc:"Dr. A. Khan",admitted:"May 7, 2026",status:"stable"},
+    {name:"Thomas Brown",id:"P-4830",init:"TB",col:"#9333ea",age:"66M",ward:"Surgery — Bed 3",dx:"Hip Replacement Recovery",doc:"Dr. S. Williams",admitted:"May 1, 2026",status:"stable"},
+  ];
+  const tb=document.getElementById('ptable');
+  data.forEach(p=>{
+    tb.innerHTML+=`<tr>
+      <td><div class="patient-info"><div class="patient-avatar" style="background:${p.col}">${p.init}</div><div><div style="font-size:13px;font-weight:600">${p.name}</div><div style="font-size:11px;color:var(--gray)">${p.id}</div></div></div></td>
+      <td>${p.age}</td><td style="font-size:12px">${p.ward}</td>
+      <td style="font-size:12px;max-width:200px">${p.dx}</td>
+      <td style="font-size:12px">${p.doc}</td>
+      <td style="font-size:12px">${p.admitted}</td>
+      <td><span class="pill ${p.status}">${p.status.charAt(0).toUpperCase()+p.status.slice(1)}</span></td>
+      <td><div class="action-btns"><div class="icon-btn" title="View">👁</div><div class="icon-btn" title="Edit">✏️</div><div class="icon-btn" title="Notes">📝</div></div></td>
+    </tr>`;
+  });
+  document.querySelectorAll('.filter-btn').forEach(b=>{b.addEventListener('click',function(){document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));this.classList.add('active');});});
+</script>
+</body>
+</html>
