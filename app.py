@@ -18,6 +18,22 @@ def login():
 def dashboard():
     return render_template('ehr_dashboard.html')
 
+app.route('/patients')
+def patients():
+    return render_template('patients.html')
+ 
+@app.route('/emergency')
+def emergency():
+    return render_template('emergency.html')
+ 
+@app.route('/appointments')
+def appointments_page():
+    return render_template('appointments.html')
+ 
+@app.route('/lab')
+def lab_page():
+    return render_template('lab.html')
+
 
 @app.route('/load')
 def generate_load():
@@ -64,20 +80,35 @@ def ehr_status():
 
 @app.route('/api/deployment/webhook', methods=['POST'])
 def deployment_webhook():
-    data = request.json or {}
-    status  = data.get('status',  'unknown')
-    version = data.get('version', 'unknown')
-
-    # Send custom event to App Insights
-    tc.track_event('DEVPULSE_DEPLOYMENT', {
-        'status':  status,
-        'version': version[:8],
-        'stage':   data.get('stage', 'unknown')
+    data     = request.json or {}
+    status   = data.get('status',      'unknown')
+    version  = data.get('version',     'unknown')
+    stage    = data.get('stage',       'unknown')
+    triggered= data.get('triggered_by','system')
+ 
+    print(
+        f"DEVPULSE_DEPLOYMENT | "
+        f"status={status} | "
+        f"version={version[:8]} | "
+        f"stage={stage} | "
+        f"triggered_by={triggered} | "
+        f"timestamp={datetime.utcnow().isoformat()}",
+        flush=True
+    )
+ 
+    if status == 'failed':
+        print(
+            f"DEVPULSE_ALERT | severity=critical | "
+            f"message=Deployment failed for version {version[:8]}",
+            flush=True
+        )
+ 
+    return jsonify({
+        "received":  True,
+        "status":    status,
+        "version":   version[:8],
+        "timestamp": datetime.utcnow().isoformat()
     })
-    tc.flush()
-
-    return jsonify({"received": True, "status": status})
-
 # Database latency simulation (mentioned in problem statement)
 @app.route('/api/db/query')
 def db_query():
