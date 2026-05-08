@@ -4,120 +4,154 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CityGeneral EHR — Secure Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <style>
     :root {
-      --navy:#0a1628; --blue:#1a4480; --sky:#2563eb;
-      --ice:#e8f0fe; --mint:#00c9a7; --text:#1e293b;
-      --muted:#64748b; --border:#e2e8f0; --white:#ffffff;
+      --navy:#0a1628; --blue:#1e40af; --sky:#3b82f6;
+      --teal:#0d9488; --white:#ffffff; --gray:#64748b;
+      --border:#e2e8f0; --red:#dc2626; --light:#f0f7ff;
     }
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:'DM Sans',sans-serif;background:var(--navy);min-height:100vh;display:flex;overflow:hidden;}
-    .left{width:55%;background:linear-gradient(135deg,#0a1628 0%,#1a4480 60%,#1e3a5f 100%);position:relative;display:flex;flex-direction:column;justify-content:space-between;padding:48px;overflow:hidden;}
-    .left::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,0.15) 0%,transparent 70%);top:-100px;right:-100px;}
-    .grid-overlay{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:48px 48px;}
-    .brand{position:relative;z-index:2;}
-    .brand .cross{width:48px;height:48px;background:var(--mint);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;color:white;margin-bottom:20px;box-shadow:0 0 30px rgba(0,201,167,0.4);}
-    .brand h1{font-family:'DM Serif Display',serif;color:white;font-size:32px;line-height:1.2;margin-bottom:8px;}
-    .brand h1 span{color:var(--mint);}
-    .brand p{color:rgba(255,255,255,0.5);font-size:14px;}
-    .stats{position:relative;z-index:2;}
-    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
-    .stat-box{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;backdrop-filter:blur(10px);}
-    .stat-box .num{font-size:28px;font-weight:600;color:white;margin-bottom:4px;}
-    .stat-box .num span{color:var(--mint);}
-    .stat-box .lbl{font-size:12px;color:rgba(255,255,255,0.45);}
-    .compliance-badges{display:flex;gap:10px;flex-wrap:wrap;}
-    .badge{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);}
-    .right{width:45%;background:white;display:flex;align-items:center;justify-content:center;padding:48px;}
-    .login-box{width:100%;max-width:380px;}
-    .login-header{margin-bottom:36px;}
-    .tag{display:inline-flex;align-items:center;gap:6px;background:var(--ice);color:var(--sky);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.5px;margin-bottom:16px;}
-    .tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--mint);animation:blink 1.5s infinite;}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-    .login-header h2{font-family:'DM Serif Display',serif;font-size:28px;color:var(--text);margin-bottom:6px;}
-    .login-header p{font-size:13px;color:var(--muted);}
-    .role-select{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
-    .role-btn{padding:10px;border:1.5px solid var(--border);border-radius:10px;background:#fafafa;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--muted);cursor:pointer;text-align:center;transition:all 0.2s;}
-    .role-btn:hover{border-color:var(--sky);color:var(--sky);}
-    .role-btn.active{border-color:var(--sky);background:var(--ice);color:var(--sky);font-weight:600;}
-    .role-btn .emoji{display:block;font-size:18px;margin-bottom:4px;}
+
+    /* LEFT */
+    .left{flex:1;background:linear-gradient(145deg,#0a1628 0%,#0f2347 50%,#0d3a5e 100%);display:flex;flex-direction:column;justify-content:center;padding:60px;position:relative;overflow:hidden;}
+    .left::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(59,130,246,.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(13,148,136,.08) 0%,transparent 50%);}
+    .circle{position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.04);}
+    .c1{width:500px;height:500px;top:-100px;right:-150px;}
+    .c2{width:300px;height:300px;bottom:-50px;left:-80px;}
+    .c3{width:200px;height:200px;top:40%;right:10%;border-color:rgba(59,130,246,.08);}
+    .grid-overlay{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:60px 60px;}
+    .left-content{position:relative;z-index:1;}
+    .hospital-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);padding:8px 16px;border-radius:40px;margin-bottom:40px;}
+    .hospital-badge .cross{width:28px;height:28px;background:var(--red);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;}
+    .hospital-badge span{font-size:13px;color:rgba(255,255,255,.7);font-weight:500;letter-spacing:.5px;}
+    .left h1{font-family:'DM Serif Display',serif;font-size:52px;line-height:1.1;color:white;margin-bottom:20px;}
+    .left h1 em{color:#60a5fa;font-style:normal;}
+    .left p{font-size:16px;color:rgba(255,255,255,.5);line-height:1.7;max-width:420px;margin-bottom:48px;}
+    .stats{display:flex;gap:40px;}
+    .stat .num{font-size:28px;font-weight:600;color:white;}
+    .stat .lbl{font-size:12px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;}
+    .badges{display:flex;gap:10px;margin-top:48px;}
+    .badge{padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:.5px;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);}
+
+    /* RIGHT */
+    .right{width:480px;background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:60px 52px;position:relative;}
+    .right-header{margin-bottom:36px;}
+    .right-header h2{font-family:'DM Serif Display',serif;font-size:30px;color:var(--navy);margin-bottom:6px;}
+    .right-header p{font-size:14px;color:var(--gray);}
     .form-group{margin-bottom:18px;}
-    .form-group label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+    .form-group label{display:block;font-size:11px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;}
     .input-wrap{position:relative;}
-    .input-wrap .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;}
-    .form-group input{width:100%;padding:12px 14px 12px 40px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fafafa;transition:all 0.2s;}
-    .form-group input:focus{outline:none;border-color:var(--sky);background:white;box-shadow:0 0 0 3px rgba(37,99,235,0.08);}
-    .btn-login{width:100%;padding:14px;background:linear-gradient(135deg,var(--sky),var(--blue));color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(37,99,235,0.3);margin-bottom:16px;}
-    .btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(37,99,235,0.4);}
-    .divider{text-align:center;font-size:12px;color:var(--muted);margin-bottom:14px;position:relative;}
-    .divider::before,.divider::after{content:'';position:absolute;top:50%;width:38%;height:1px;background:var(--border);}
-    .divider::before{left:0;}.divider::after{right:0;}
-    .quick-access{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    .quick-btn{padding:10px;border:1.5px solid var(--border);border-radius:10px;background:white;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);cursor:pointer;text-align:center;transition:all 0.2s;}
-    .quick-btn:hover{border-color:var(--mint);}
-    .quick-btn .qlbl{font-weight:600;font-size:11px;display:block;margin-top:2px;}
-    .footer-note{margin-top:28px;padding-top:20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:11px;color:var(--muted);}
+    .input-wrap .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;}
+    .form-group input,.form-group select{width:100%;padding:12px 14px 12px 42px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--navy);background:#fafcff;transition:all .2s;}
+    .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--sky);background:white;box-shadow:0 0 0 3px rgba(59,130,246,.08);}
+    .form-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+    .remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer;}
+    .forgot{font-size:13px;color:var(--sky);text-decoration:none;font-weight:500;}
+    .btn-login{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--sky));color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(30,64,175,.3);}
+    .btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(30,64,175,.4);}
+    .divider{display:flex;align-items:center;gap:12px;margin:22px 0;color:var(--border);}
+    .divider hr{flex:1;border:none;border-top:1px solid var(--border);}
+    .divider span{font-size:12px;color:#94a3b8;white-space:nowrap;}
+    .quick-access{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .qa-btn{padding:10px;border:1.5px solid var(--border);border-radius:8px;background:white;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .qa-btn:hover{border-color:var(--sky);color:var(--sky);background:#f0f7ff;}
+    .security-note{margin-top:22px;padding:12px 16px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;display:flex;align-items:center;gap:10px;font-size:12px;color:#166534;}
+    .right-footer{margin-top:auto;padding-top:28px;font-size:11px;color:#94a3b8;text-align:center;line-height:1.6;}
+
+    /* Loader */
+    .loading{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:100;transition:opacity .5s;}
+    .loading.hide{opacity:0;pointer-events:none;}
+    .loader{text-align:center;color:white;}
+    .cross-anim{width:56px;height:56px;background:var(--red);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;animation:beat 1s ease-in-out infinite;}
+    @keyframes beat{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+    .loader p{font-size:14px;color:rgba(255,255,255,.5);}
   </style>
 </head>
 <body>
+<div class="loading" id="loading">
+  <div class="loader">
+    <div class="cross-anim">✚</div>
+    <p>Initializing secure connection...</p>
+  </div>
+</div>
+
 <div class="left">
   <div class="grid-overlay"></div>
-  <div class="brand">
-    <div class="cross">✚</div>
-    <h1>City<span>General</span><br>Hospital</h1>
-    <p>Electronic Health Records System · v4.2.1</p>
-  </div>
-  <div class="stats">
-    <div class="stats-grid">
-      <div class="stat-box"><div class="num">1,<span>247</span></div><div class="lbl">Active Patients Today</div></div>
-      <div class="stat-box"><div class="num"><span>99.7</span>%</div><div class="lbl">System Uptime</div></div>
-      <div class="stat-box"><div class="num"><span>342</span></div><div class="lbl">Scheduled Appointments</div></div>
-      <div class="stat-box"><div class="num"><span>18</span></div><div class="lbl">Emergency Cases Active</div></div>
+  <div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div>
+  <div class="left-content">
+    <div class="hospital-badge">
+      <div class="cross">✚</div>
+      <span>CITY GENERAL HOSPITAL</span>
     </div>
-    <div class="compliance-badges">
-      <div class="badge">🔒 HIPAA Compliant</div>
-      <div class="badge">✓ HL7 FHIR</div>
-      <div class="badge">🛡 ISO 27001</div>
-      <div class="badge">⚡ DevPulse Monitored</div>
+    <h1>Patient Care<br>Starts with<br><em>Reliable</em> Systems</h1>
+    <p>Integrated Electronic Health Records platform serving 1,200+ clinical staff across 8 departments. Monitored 24/7 by DevPulse HealthOps.</p>
+    <div class="stats">
+      <div class="stat"><div class="num">99.7%</div><div class="lbl">Uptime</div></div>
+      <div class="stat"><div class="num">1,247</div><div class="lbl">Staff Users</div></div>
+      <div class="stat"><div class="num">340ms</div><div class="lbl">Avg Response</div></div>
+    </div>
+    <div class="badges">
+      <div class="badge">HIPAA COMPLIANT</div>
+      <div class="badge">HL7 FHIR</div>
+      <div class="badge">ISO 27001</div>
+      <div class="badge">SOC 2</div>
     </div>
   </div>
 </div>
+
 <div class="right">
-  <div class="login-box">
-    <div class="login-header">
-      <div class="tag">SECURE ACCESS PORTAL</div>
-      <h2>Welcome Back</h2>
-      <p>Sign in to access patient records and clinical systems</p>
-    </div>
-    <div style="margin-bottom:18px">
-      <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px">Select Role</label>
-      <div class="role-select">
-        <div class="role-btn active" onclick="selectRole(this)"><span class="emoji">👨‍⚕️</span>Physician</div>
-        <div class="role-btn" onclick="selectRole(this)"><span class="emoji">👩‍⚕️</span>Nurse</div>
-        <div class="role-btn" onclick="selectRole(this)"><span class="emoji">🔬</span>Lab Tech</div>
-        <div class="role-btn" onclick="selectRole(this)"><span class="emoji">⚙️</span>IT Admin</div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Staff ID</label>
-      <div class="input-wrap"><span class="icon">👤</span><input type="text" value="DR-2024-001"></div>
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <div class="input-wrap"><span class="icon">🔑</span><input type="password" value="••••••••"></div>
-    </div>
-    <button class="btn-login" onclick="window.location.href='/ehr'">Sign In to EHR System →</button>
-    <div class="divider">or quick access</div>
-    <div class="quick-access">
-      <div class="quick-btn" onclick="window.location.href='/emergency'">🚨 <span class="qlbl">Emergency Access</span></div>
-      <div class="quick-btn" onclick="window.location.href='/appointments'">📋 <span class="qlbl">View Schedules</span></div>
-    </div>
-    <div class="footer-note">🛡 <span>Monitored by <strong>DevPulse HealthOps</strong>. All access logged per HIPAA.</span></div>
+  <div class="right-header">
+    <h2>Welcome Back</h2>
+    <p>Sign in to access the EHR system</p>
   </div>
+  <div class="form-group">
+    <label>Staff ID / Username</label>
+    <div class="input-wrap"><span class="icon">👤</span>
+      <input type="text" placeholder="e.g. DR-2847 or jsmith" value="DR-2847">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <div class="input-wrap"><span class="icon">🔒</span>
+      <input type="password" value="password123">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Department</label>
+    <div class="input-wrap"><span class="icon">🏥</span>
+      <select style="padding-left:42px">
+        <option>Emergency Medicine</option>
+        <option>Cardiology</option>
+        <option>Oncology</option>
+        <option>Pediatrics</option>
+        <option>Surgery</option>
+        <option>Radiology</option>
+        <option>ICU</option>
+        <option>Administration</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <label class="remember"><input type="checkbox" checked> Remember this device</label>
+    <a href="#" class="forgot">Forgot password?</a>
+  </div>
+  <button class="btn-login" onclick="doLogin()">Sign In to EHR →</button>
+  <div class="divider"><hr><span>Quick Access</span><hr></div>
+  <div class="quick-access">
+    <button class="qa-btn" onclick="window.location.href='/dashboard'">🚨 Emergency Dept</button>
+    <button class="qa-btn" onclick="window.location.href='/patients'">📋 Patient Records</button>
+    <button class="qa-btn" onclick="window.location.href='/appointments'">📅 Appointments</button>
+    <button class="qa-btn" onclick="window.location.href='/lab'">🔬 Lab Results</button>
+  </div>
+  <div class="security-note">🔐 <span>256-bit encrypted · Session expires 8 hours · All access logged</span></div>
+  <div class="right-footer">City General Hospital EHR v4.2.1 · DevPulse HealthOps · Azure Monitor<br>© 2026 City General Hospital IT Department</div>
 </div>
+
 <script>
-function selectRole(el){document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+  window.addEventListener('load',()=>{setTimeout(()=>{document.getElementById('loading').classList.add('hide');},1000);});
+  function doLogin(){const b=document.querySelector('.btn-login');b.textContent='Authenticating...';b.style.opacity='.8';setTimeout(()=>{window.location.href='/dashboard';},800);}
 </script>
 </body>
 </html>
