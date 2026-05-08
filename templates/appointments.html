@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CityGeneral EHR — Appointments</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root{--navy:#0a1628;--blue:#1e40af;--sky:#3b82f6;--teal:#0d9488;--white:#fff;--gray:#64748b;--border:#e2e8f0;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--bg:#f8fafc;--sidebar:220px;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1e293b;display:flex;min-height:100vh;}
+
+    /* SIDEBAR */
+    .sidebar{width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;}
+    .sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .cross{width:36px;height:36px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;margin-bottom:10px;}
+    .sidebar-logo h1{font-family:'DM Serif Display',serif;font-size:16px;color:white;line-height:1.2;}
+    .sidebar-logo p{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;letter-spacing:.5px;}
+    .nav-section{padding:16px 0;}
+    .nav-label{font-size:10px;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px;padding:0 20px;margin-bottom:6px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .2s;border-left:3px solid transparent;text-decoration:none;}
+    .nav-item:hover{color:white;background:rgba(255,255,255,.05);}
+    .nav-item.active{color:white;background:rgba(59,130,246,.15);border-left-color:var(--sky);}
+    .nav-item .icon{font-size:16px;width:20px;text-align:center;}
+    .nav-item .badge{margin-left:auto;background:var(--red);color:white;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;}
+    .nav-item .badge.green{background:var(--green);}
+    .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);}
+    .user-card{display:flex;align-items:center;gap:10px;}
+    .avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--sky),var(--teal));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
+    .user-info .name{font-size:13px;color:white;font-weight:500;}
+    .user-info .role{font-size:11px;color:rgba(255,255,255,.4);}
+
+    /* MAIN */
+    .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+    .topbar{background:white;border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:40;}
+    .topbar h2{font-size:16px;font-weight:600;color:var(--navy);}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+    .btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;border:none;}
+    .btn-primary{background:var(--blue);color:white;}
+    .btn-primary:hover{background:#1d4ed8;}
+    .btn-outline{background:white;color:var(--navy);border:1.5px solid var(--border);}
+    .btn-outline:hover{border-color:var(--sky);color:var(--sky);}
+    .content{padding:24px 28px;flex:1;}
+
+    /* STAT CARDS */
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;}
+    .stat-card{background:white;border-radius:10px;padding:16px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);}
+    .stat-card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .stat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+    .stat-card .num{font-size:26px;font-weight:700;color:var(--navy);}
+    .stat-card .lbl{font-size:11px;color:var(--gray);margin-top:2px;}
+    .trend{font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;}
+    .trend.up{background:#fef2f2;color:var(--red);}
+    .trend.ok{background:#f0fdf4;color:var(--green);}
+    .trend.warn{background:#fff7ed;color:var(--orange);}
+
+    /* LAYOUT */
+    .layout{display:grid;grid-template-columns:1fr 320px;gap:20px;}
+    .card{background:white;border-radius:10px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;}
+    .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .card-header h3{font-size:14px;font-weight:600;color:var(--navy);}
+
+    /* FILTERS */
+    .filters{display:flex;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+    .filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--gray);font-family:'DM Sans',sans-serif;transition:all .2s;}
+    .filter-btn.active{background:var(--blue);color:white;border-color:var(--blue);}
+    .filter-btn:hover:not(.active){border-color:var(--sky);color:var(--sky);}
+
+    /* APPOINTMENT ROWS */
+    .apt-row{display:grid;grid-template-columns:80px 1fr auto auto auto;gap:16px;align-items:center;padding:14px 20px;border-bottom:1px solid #f1f5f9;transition:background .15s;}
+    .apt-row:last-child{border-bottom:none;}
+    .apt-row:hover{background:#fafbfc;}
+    .time-box{background:var(--bg);border-radius:8px;padding:8px 6px;text-align:center;border:1px solid var(--border);}
+    .time-box .t{font-size:14px;font-weight:700;color:var(--navy);}
+    .time-box .ap{font-size:10px;color:var(--gray);}
+    .apt-patient{display:flex;align-items:center;gap:10px;}
+    .pt-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;}
+    .pt-name{font-size:13px;font-weight:600;color:var(--navy);}
+    .pt-meta{font-size:11px;color:var(--gray);margin-top:2px;}
+    .apt-type{font-size:12px;color:var(--navy);font-weight:500;}
+    .apt-type span{display:block;font-size:11px;color:var(--gray);font-weight:400;margin-top:2px;}
+    .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+    .pill.completed{background:#f0fdf4;color:var(--green);}
+    .pill.in-progress{background:#fff7ed;color:var(--orange);}
+    .pill.confirmed{background:#eff6ff;color:#1d4ed8;}
+    .pill.pending{background:#fefce8;color:#ca8a04;}
+    .pill.cancelled{background:#f1f5f9;color:var(--gray);}
+    .pill.no-show{background:#fef2f2;color:var(--red);}
+    .apt-actions{display:flex;gap:6px;}
+    .icon-btn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;}
+    .icon-btn:hover{background:var(--bg);border-color:var(--sky);}
+
+    /* CALENDAR MINI */
+    .mini-cal{padding:16px;}
+    .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+    .cal-header .month{font-size:14px;font-weight:600;color:var(--navy);}
+    .cal-nav{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;}
+    .cal-day-label{font-size:10px;color:var(--gray);font-weight:600;padding:4px 0;text-transform:uppercase;}
+    .cal-day{font-size:12px;padding:6px 4px;border-radius:6px;cursor:pointer;color:var(--navy);}
+    .cal-day:hover{background:var(--bg);}
+    .cal-day.today{background:var(--blue);color:white;font-weight:600;}
+    .cal-day.has-apts{position:relative;}
+    .cal-day.has-apts::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--sky);}
+    .cal-day.today.has-apts::after{background:white;}
+    .cal-day.other-month{color:#cbd5e1;}
+
+    /* UPCOMING */
+    .upcoming-item{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;gap:10px;align-items:flex-start;}
+    .upcoming-item:last-child{border-bottom:none;}
+    .upcoming-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+    .upcoming-info .name{font-size:13px;font-weight:600;color:var(--navy);}
+    .upcoming-info .detail{font-size:11px;color:var(--gray);margin-top:2px;}
+
+    /* DOCTOR SCHEDULE */
+    .doc-item{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;}
+    .doc-item:last-child{border-bottom:none;}
+    .doc-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;}
+    .doc-info .dname{font-size:13px;font-weight:600;color:var(--navy);}
+    .doc-info .dspec{font-size:11px;color:var(--gray);}
+    .doc-count{margin-left:auto;text-align:right;}
+    .doc-count .n{font-size:14px;font-weight:700;color:var(--navy);}
+    .doc-count .l{font-size:10px;color:var(--gray);}
+
+    .footer{background:white;border-top:1px solid var(--border);padding:12px 28px;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;}
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="cross">✚</div>
+    <h1>CityGeneral<br>Hospital EHR</h1>
+    <p>CLINICAL INFORMATION SYSTEM</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Clinical</div>
+    <a href="/dashboard" class="nav-item"><span class="icon">🏠</span> Overview</a>
+    <a href="/patients" class="nav-item"><span class="icon">👥</span> Patient Records<span class="badge green">247</span></a>
+    <a href="/emergency" class="nav-item"><span class="icon">🚨</span> Emergency Queue<span class="badge">12</span></a>
+    <a href="/appointments" class="nav-item active"><span class="icon">📅</span> Appointments</a>
+    <a href="/lab" class="nav-item"><span class="icon">🔬</span> Lab Results<span class="badge">5</span></a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Clinical Tools</div>
+    <a href="#" class="nav-item"><span class="icon">💊</span> Medications</a>
+    <a href="#" class="nav-item"><span class="icon">🩻</span> Radiology</a>
+    <a href="#" class="nav-item"><span class="icon">📝</span> Clinical Notes</a>
+    <a href="#" class="nav-item"><span class="icon">📊</span> Reports</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">JS</div>
+      <div class="user-info"><div class="name">Dr. James Smith</div><div class="role">Emergency Medicine</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div style="font-size:11px;color:var(--gray)">EHR / Appointments</div>
+      <h2>Appointment Management</h2>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-outline">📤 Export</button>
+      <button class="btn btn-outline">🗓 Weekly View</button>
+      <button class="btn btn-primary">+ Schedule Appointment</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#eff6ff">📅</div><span class="trend ok">Today</span></div>
+        <div class="num">38</div><div class="lbl">Scheduled Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#f0fdf4">✅</div><span class="trend ok">+12</span></div>
+        <div class="num">14</div><div class="lbl">Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#fff7ed">⏳</div><span class="trend warn">Next</span></div>
+        <div class="num">11</div><div class="lbl">Upcoming</div>
+      </div>
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#fef2f2">❌</div><span class="trend up">↑ 2</span></div>
+        <div class="num">3</div><div class="lbl">Cancelled / No-show</div>
+      </div>
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#f5f3ff">👨‍⚕️</div></div>
+        <div class="num">8</div><div class="lbl">Doctors On Duty</div>
+      </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="layout">
+
+      <!-- LEFT: APPOINTMENT LIST -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📅 Today's Schedule — May 8, 2026</h3>
+          <span style="font-size:12px;color:var(--gray)" id="clock"></span>
+        </div>
+        <div class="filters">
+          <button class="filter-btn active">All</button>
+          <button class="filter-btn">Completed</button>
+          <button class="filter-btn">In Progress</button>
+          <button class="filter-btn">Upcoming</button>
+          <button class="filter-btn">Cancelled</button>
+          <button class="filter-btn">Dr. Patel</button>
+          <button class="filter-btn">Dr. Williams</button>
+          <button class="filter-btn">Dr. Khan</button>
+        </div>
+        <div id="apt-list"></div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div>
+
+        <!-- MINI CALENDAR -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><h3>🗓 May 2026</h3></div>
+          <div class="mini-cal">
+            <div class="cal-grid">
+              <div class="cal-day-label">Su</div><div class="cal-day-label">Mo</div>
+              <div class="cal-day-label">Tu</div><div class="cal-day-label">We</div>
+              <div class="cal-day-label">Th</div><div class="cal-day-label">Fr</div>
+              <div class="cal-day-label">Sa</div>
+            </div>
+            <div class="cal-grid" id="cal-days"></div>
+          </div>
+        </div>
+
+        <!-- UPCOMING THIS WEEK -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><h3>📌 Upcoming This Week</h3></div>
+          <div>
+            <div class="upcoming-item"><div class="upcoming-dot" style="background:var(--blue)"></div><div class="upcoming-info"><div class="name">Cardiology Round — Dr. Patel</div><div class="detail">Tomorrow 09:00 AM · 6 patients</div></div></div>
+            <div class="upcoming-item"><div class="upcoming-dot" style="background:var(--purple)"></div><div class="upcoming-info"><div class="name">Oncology Review — Dr. Lee</div><div class="detail">May 9 · 11:00 AM · 4 patients</div></div></div>
+            <div class="upcoming-item"><div class="upcoming-dot" style="background:var(--green)"></div><div class="upcoming-info"><div class="name">Pediatrics Clinic — Dr. Khan</div><div class="detail">May 10 · 10:00 AM · 8 patients</div></div></div>
+            <div class="upcoming-item"><div class="upcoming-dot" style="background:var(--orange)"></div><div class="upcoming-info"><div class="name">Maternity Checkups — Dr. Nguyen</div><div class="detail">May 11 · 02:00 PM · 5 patients</div></div></div>
+          </div>
+        </div>
+
+        <!-- DOCTOR SCHEDULE -->
+        <div class="card">
+          <div class="card-header"><h3>👨‍⚕️ Doctor Load Today</h3></div>
+          <div id="doc-list"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>CityGeneral Hospital EHR v4.2.1 · Appointments Module</span>
+    <span>Monitored by DevPulse HealthOps · Azure Monitor Active</span>
+  </div>
+</div>
+
+<script>
+  // Clock
+  setInterval(()=>{const e=document.getElementById('clock');if(e)e.textContent=new Date().toLocaleTimeString();},1000);
+
+  // Appointments data
+  const apts=[
+    {time:"08:00",ap:"AM",name:"Michael Brown",init:"MB",col:"#3b82f6",age:"52M",type:"Cardiology Follow-up",sub:"Post-MI Review",doc:"Dr. R. Patel",room:"Clinic 3",status:"completed"},
+    {time:"08:30",ap:"AM",name:"Priya Sharma",init:"PS",col:"#7c3aed",age:"28F",type:"Prenatal Visit",sub:"28 Week Checkup",doc:"Dr. L. Nguyen",room:"Maternity 1",status:"completed"},
+    {time:"09:00",ap:"AM",name:"George Hall",init:"GH",col:"#0d9488",age:"67M",type:"Diabetes Management",sub:"HbA1c Review",doc:"Dr. M. Okonkwo",room:"Clinic 1",status:"completed"},
+    {time:"09:30",ap:"AM",name:"Jennifer Lee",init:"JL",col:"#ea580c",age:"44F",type:"Annual Physical",sub:"Routine Screening",doc:"Dr. S. Williams",room:"Clinic 2",status:"completed"},
+    {time:"10:00",ap:"AM",name:"Carlos Rivera",init:"CR",col:"#16a34a",age:"55M",type:"Oncology Consultation",sub:"Lymphoma Staging",doc:"Dr. Y. Lee",room:"Oncology 2",status:"completed"},
+    {time:"10:30",ap:"AM",name:"Sarah Blake",init:"SB",col:"#be185d",age:"32F",type:"Dermatology",sub:"Mole Removal Follow-up",doc:"Dr. A. Hassan",room:"Clinic 4",status:"in-progress"},
+    {time:"11:00",ap:"AM",name:"David Okafor",init:"DO",col:"#1d4ed8",age:"41M",type:"Physiotherapy",sub:"Lower Back Rehab",doc:"Dr. K. Singh",room:"Physio 1",status:"confirmed"},
+    {time:"11:30",ap:"AM",name:"Maria Santos",init:"MS",col:"#0891b2",age:"38F",type:"Gynecology",sub:"Annual Exam",doc:"Dr. L. Nguyen",room:"Maternity 2",status:"confirmed"},
+    {time:"12:00",ap:"PM",name:"Lunch Break",init:"—",col:"#94a3b8",age:"—",type:"— Lunch Break —",sub:"All clinics closed 12:00–13:00",doc:"—",room:"—",status:"cancelled"},
+    {time:"01:00",ap:"PM",name:"Thomas Wright",init:"TW",col:"#9333ea",age:"72M",type:"Cardiology",sub:"Pacemaker Check",doc:"Dr. R. Patel",room:"Cardio Lab",status:"confirmed"},
+    {time:"01:30",ap:"PM",name:"Emma Clarke",init:"EC",col:"#065f46",age:"8F",type:"Pediatrics",sub:"Asthma Review",doc:"Dr. A. Khan",room:"Peds 1",status:"confirmed"},
+    {time:"02:00",ap:"PM",name:"Susan Park",init:"SP",col:"#dc2626",age:"61F",type:"Oncology",sub:"Chemotherapy Consult",doc:"Dr. Y. Lee",room:"Oncology 1",status:"confirmed"},
+    {time:"02:30",ap:"PM",name:"Andrew Kim",init:"AK",col:"#b45309",age:"45M",type:"Orthopaedics",sub:"Post-Op Hip Check",doc:"Dr. S. Williams",room:"Clinic 5",status:"confirmed"},
+    {time:"03:00",ap:"PM",name:"Diana Prince",init:"DP",col:"#0d9488",age:"25F",type:"Prenatal Visit",sub:"First Trimester",doc:"Dr. L. Nguyen",room:"Maternity 1",status:"pending"},
+    {time:"03:30",ap:"PM",name:"Robert Fox",init:"RF",col:"#64748b",age:"58M",type:"Neurology",sub:"Migraine Management",doc:"Dr. C. Mehta",room:"Neuro 2",status:"pending"},
+    {time:"04:00",ap:"PM",name:"Linda Carter",init:"LC",col:"#7c3aed",age:"49F",type:"Endocrinology",sub:"Thyroid Review",doc:"Dr. M. Okonkwo",room:"Clinic 1",status:"no-show"},
+  ];
+
+  const list=document.getElementById('apt-list');
+  apts.forEach(a=>{
+    list.innerHTML+=`<div class="apt-row">
+      <div class="time-box"><div class="t">${a.time}</div><div class="ap">${a.ap}</div></div>
+      <div class="apt-patient">
+        <div class="pt-avatar" style="background:${a.col}">${a.init}</div>
+        <div><div class="pt-name">${a.name}</div><div class="pt-meta">${a.age} · ${a.room}</div></div>
+      </div>
+      <div class="apt-type">${a.type}<span>${a.sub}</span></div>
+      <div style="font-size:12px;color:var(--gray);white-space:nowrap">${a.doc}</div>
+      <span class="pill ${a.status.replace(' ','-')}">${a.status.replace('-',' ').replace(/\b\w/g,c=>c.toUpperCase())}</span>
+      <div class="apt-actions">
+        <div class="icon-btn" title="View">👁</div>
+        <div class="icon-btn" title="Edit">✏️</div>
+        <div class="icon-btn" title="Notes">📝</div>
+      </div>
+    </div>`;
+  });
+
+  // Mini calendar
+  const calDiv=document.getElementById('cal-days');
+  const daysInMay=31; const startDay=4; // May 1 2026 = Friday
+  const hasApts=[1,5,6,7,8,12,14,15,19,20,21,22,26,28,29];
+  for(let i=0;i<startDay;i++) calDiv.innerHTML+=`<div class="cal-day other-month">${26+i}</div>`;
+  for(let d=1;d<=daysInMay;d++){
+    const isToday=d===8;
+    const hasA=hasApts.includes(d);
+    calDiv.innerHTML+=`<div class="cal-day ${isToday?'today':''} ${hasA?'has-apts':''}">${d}</div>`;
+  }
+
+  // Doctor list
+  const docs=[
+    {init:"RP",col:"#3b82f6",name:"Dr. R. Patel",spec:"Cardiology",count:6},
+    {init:"SW",col:"#0d9488",name:"Dr. S. Williams",spec:"Surgery / Ortho",count:5},
+    {init:"AK",col:"#7c3aed",name:"Dr. A. Khan",spec:"Paediatrics",count:4},
+    {init:"YL",col:"#dc2626",name:"Dr. Y. Lee",spec:"Oncology",count:4},
+    {init:"LN",col:"#be185d",name:"Dr. L. Nguyen",spec:"Maternity",count:5},
+    {init:"MO",col:"#ea580c",name:"Dr. M. Okonkwo",spec:"Endocrinology",count:3},
+  ];
+  const docDiv=document.getElementById('doc-list');
+  docs.forEach(d=>{
+    docDiv.innerHTML+=`<div class="doc-item">
+      <div class="doc-avatar" style="background:${d.col}">${d.init}</div>
+      <div class="doc-info"><div class="dname">${d.name}</div><div class="dspec">${d.spec}</div></div>
+      <div class="doc-count"><div class="n">${d.count}</div><div class="l">appts</div></div>
+    </div>`;
+  });
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

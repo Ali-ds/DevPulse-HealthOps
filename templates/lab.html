@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CityGeneral EHR — Lab Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root{--navy:#0a1628;--blue:#1e40af;--sky:#3b82f6;--teal:#0d9488;--white:#fff;--gray:#64748b;--border:#e2e8f0;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--bg:#f8fafc;--sidebar:220px;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1e293b;display:flex;min-height:100vh;}
+    .sidebar{width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;}
+    .sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .cross{width:36px;height:36px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;margin-bottom:10px;}
+    .sidebar-logo h1{font-family:'DM Serif Display',serif;font-size:16px;color:white;line-height:1.2;}
+    .sidebar-logo p{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;letter-spacing:.5px;}
+    .nav-section{padding:16px 0;}
+    .nav-label{font-size:10px;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px;padding:0 20px;margin-bottom:6px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .2s;border-left:3px solid transparent;text-decoration:none;}
+    .nav-item:hover{color:white;background:rgba(255,255,255,.05);}
+    .nav-item.active{color:white;background:rgba(59,130,246,.15);border-left-color:var(--sky);}
+    .nav-item .icon{font-size:16px;width:20px;text-align:center;}
+    .nav-item .badge{margin-left:auto;background:var(--red);color:white;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;}
+    .nav-item .badge.green{background:var(--green);}
+    .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);}
+    .user-card{display:flex;align-items:center;gap:10px;}
+    .avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--sky),var(--teal));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
+    .user-info .name{font-size:13px;color:white;font-weight:500;}
+    .user-info .role{font-size:11px;color:rgba(255,255,255,.4);}
+    .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+    .topbar{background:white;border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:40;}
+    .topbar h2{font-size:16px;font-weight:600;color:var(--navy);}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+    .btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;border:none;}
+    .btn-primary{background:var(--blue);color:white;}
+    .btn-outline{background:white;color:var(--navy);border:1.5px solid var(--border);}
+    .btn-outline:hover{border-color:var(--sky);color:var(--sky);}
+    .content{padding:24px 28px;flex:1;}
+
+    /* STAT CARDS */
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;}
+    .stat-card{background:white;border-radius:10px;padding:16px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);}
+    .stat-card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .stat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+    .stat-card .num{font-size:26px;font-weight:700;color:var(--navy);}
+    .stat-card .lbl{font-size:11px;color:var(--gray);margin-top:2px;}
+    .trend{font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;}
+    .trend.up{background:#fef2f2;color:var(--red);}
+    .trend.ok{background:#f0fdf4;color:var(--green);}
+
+    /* LAYOUT */
+    .layout{display:grid;grid-template-columns:1fr 300px;gap:20px;}
+    .card{background:white;border-radius:10px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;}
+    .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .card-header h3{font-size:14px;font-weight:600;color:var(--navy);}
+    .card-header .action{font-size:12px;color:var(--sky);cursor:pointer;font-weight:500;}
+
+    /* FILTERS */
+    .filters{display:flex;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+    .filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--gray);font-family:'DM Sans',sans-serif;transition:all .2s;}
+    .filter-btn.active{background:var(--blue);color:white;border-color:var(--blue);}
+    .filter-btn:hover:not(.active){border-color:var(--sky);color:var(--sky);}
+
+    /* LAB TABLE */
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th{padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;background:#fafbfc;border-bottom:1px solid var(--border);}
+    td{padding:13px 16px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:#fafbfc;cursor:pointer;}
+    .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+    .pill.abnormal{background:#fef2f2;color:#dc2626;}
+    .pill.normal{background:#f0fdf4;color:#16a34a;}
+    .pill.pending{background:#fefce8;color:#ca8a04;}
+    .pill.critical{background:#7f1d1d;color:white;}
+    .pill.in-progress{background:#fff7ed;color:#ea580c;}
+    .lab-icon-box{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+    .result-val{font-weight:600;}
+    .result-val.high{color:var(--red);}
+    .result-val.low{color:var(--orange);}
+    .result-val.normal{color:var(--green);}
+    .result-val.pending{color:var(--gray);}
+    .ref-range{font-size:11px;color:var(--gray);}
+    .icon-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;}
+    .icon-btn:hover{background:var(--bg);}
+    .action-group{display:flex;gap:6px;}
+
+    /* URGENT PANEL */
+    .urgent-item{padding:14px 16px;border-bottom:1px solid #f1f5f9;}
+    .urgent-item:last-child{border-bottom:none;}
+    .urgent-item .uname{font-size:13px;font-weight:600;color:var(--navy);}
+    .urgent-item .utest{font-size:12px;color:var(--gray);margin-top:2px;}
+    .urgent-item .uval{font-size:13px;font-weight:700;color:var(--red);margin-top:4px;}
+    .urgent-banner{background:#fef2f2;border-left:4px solid var(--red);padding:14px 16px;margin:0;display:flex;align-items:center;gap:10px;}
+    .urgent-banner .icon{font-size:20px;}
+    .urgent-banner div .t{font-size:13px;font-weight:700;color:#991b1b;}
+    .urgent-banner div .s{font-size:12px;color:#b91c1c;margin-top:2px;}
+
+    /* STAT BREAKDOWN */
+    .breakdown-item{padding:10px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;font-size:13px;}
+    .breakdown-item:last-child{border-bottom:none;}
+    .breakdown-item .label{color:var(--gray);}
+    .breakdown-item .val{font-weight:600;color:var(--navy);}
+
+    .footer{background:white;border-top:1px solid var(--border);padding:12px 28px;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;}
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="cross">✚</div>
+    <h1>CityGeneral<br>Hospital EHR</h1>
+    <p>CLINICAL INFORMATION SYSTEM</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Clinical</div>
+    <a href="/dashboard" class="nav-item"><span class="icon">🏠</span> Overview</a>
+    <a href="/patients" class="nav-item"><span class="icon">👥</span> Patient Records<span class="badge green">247</span></a>
+    <a href="/emergency" class="nav-item"><span class="icon">🚨</span> Emergency Queue<span class="badge">12</span></a>
+    <a href="/appointments" class="nav-item"><span class="icon">📅</span> Appointments</a>
+    <a href="/lab" class="nav-item active"><span class="icon">🔬</span> Lab Results<span class="badge">5</span></a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Clinical Tools</div>
+    <a href="#" class="nav-item"><span class="icon">💊</span> Medications</a>
+    <a href="#" class="nav-item"><span class="icon">🩻</span> Radiology</a>
+    <a href="#" class="nav-item"><span class="icon">📝</span> Clinical Notes</a>
+    <a href="#" class="nav-item"><span class="icon">📊</span> Reports</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">JS</div>
+      <div class="user-info"><div class="name">Dr. James Smith</div><div class="role">Emergency Medicine</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div style="font-size:11px;color:var(--gray)">EHR / Lab Results</div>
+      <h2>Laboratory Results</h2>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-outline">📤 Export Results</button>
+      <button class="btn btn-outline">🖨 Print Report</button>
+      <button class="btn btn-primary">+ Order New Test</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#eff6ff">🔬</div><span class="trend ok">Today</span></div>
+        <div class="num">142</div><div class="lbl">Total Results</div>
+      </div>
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#fef2f2">⚠️</div><span class="trend up">↑ 3</span></div>
+        <div class="num">18</div><div class="lbl">Abnormal Results</div>
+      </div>
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#7f1d1d">🚨</div></div>
+        <div class="num" style="color:var(--red)">5</div><div class="lbl">Critical Values</div>
+      </div>
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#fefce8">⏳</div></div>
+        <div class="num">23</div><div class="lbl">Pending</div>
+      </div>
+      <div class="stat-card">
+        <div class="top"><div class="stat-icon" style="background:#f0fdf4">✅</div><span class="trend ok">96%</span></div>
+        <div class="num">96</div><div class="lbl">Normal Results</div>
+      </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="layout">
+
+      <!-- LAB TABLE -->
+      <div class="card">
+        <div class="card-header">
+          <h3>🔬 Lab Results — May 8, 2026</h3>
+          <span style="font-size:12px;color:var(--gray)">142 results · 5 critical</span>
+        </div>
+        <div class="filters">
+          <button class="filter-btn active">All Results</button>
+          <button class="filter-btn">Critical</button>
+          <button class="filter-btn">Abnormal</button>
+          <button class="filter-btn">Pending</button>
+          <button class="filter-btn">Haematology</button>
+          <button class="filter-btn">Biochemistry</button>
+          <button class="filter-btn">Microbiology</button>
+          <button class="filter-btn">Serology</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Test</th><th>Patient</th><th>Result</th><th>Reference Range</th><th>Department</th><th>Ordered</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="lab-table"></tbody>
+        </table>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div>
+
+        <!-- CRITICAL ALERTS -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header" style="background:#fef2f2;border-bottom-color:#fecaca">
+            <h3 style="color:#991b1b">🚨 Critical Values</h3>
+            <span style="font-size:12px;color:#b91c1c">Immediate action required</span>
+          </div>
+          <div class="urgent-banner">
+            <span class="icon">⚠️</span>
+            <div><div class="t">5 critical results awaiting physician review</div><div class="s">Notify attending doctors immediately</div></div>
+          </div>
+          <div id="critical-list"></div>
+        </div>
+
+        <!-- RESULT BREAKDOWN -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><h3>📊 Result Breakdown</h3></div>
+          <div>
+            <div class="breakdown-item"><span class="label">Haematology</span><span class="val">48</span></div>
+            <div class="breakdown-item"><span class="label">Biochemistry</span><span class="val">39</span></div>
+            <div class="breakdown-item"><span class="label">Microbiology</span><span class="val">22</span></div>
+            <div class="breakdown-item"><span class="label">Serology</span><span class="val">18</span></div>
+            <div class="breakdown-item"><span class="label">Urinalysis</span><span class="val">15</span></div>
+            <div class="breakdown-item"><span class="label">Avg Turnaround</span><span class="val" style="color:var(--green)">2h 18m</span></div>
+          </div>
+        </div>
+
+        <!-- PENDING -->
+        <div class="card">
+          <div class="card-header"><h3>⏳ Awaiting Results</h3></div>
+          <div>
+            <div class="urgent-item"><div class="uname">James Wilson — P-4824</div><div class="utest">Blood Culture · Ordered 06:00 AM</div><div style="font-size:11px;color:var(--orange);margin-top:3px">⏳ Est. ready in 16 hours</div></div>
+            <div class="urgent-item"><div class="uname">Ahmed Hassan — P-4826</div><div class="utest">Echocardiogram Report · Ordered 08:30 AM</div><div style="font-size:11px;color:var(--orange);margin-top:3px">⏳ Est. ready in 2 hours</div></div>
+            <div class="urgent-item"><div class="uname">Maria Garcia — P-4823</div><div class="utest">Sputum Culture · Ordered 09:15 AM</div><div style="font-size:11px;color:var(--orange);margin-top:3px">⏳ Est. ready in 24 hours</div></div>
+            <div class="urgent-item"><div class="uname">Linda Foster — P-4827</div><div class="utest">HbA1c · Ordered 10:00 AM</div><div style="font-size:11px;color:var(--green);margin-top:3px">✅ Processing — almost ready</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>CityGeneral Hospital EHR v4.2.1 · Laboratory Module</span>
+    <span>Monitored by DevPulse HealthOps · Azure Monitor Active</span>
+  </div>
+</div>
+
+<script>
+  const labs=[
+    {icon:"🩸",bg:"#fef2f2",test:"Complete Blood Count (CBC)",patient:"Sarah Mitchell",pid:"P-4821",result:"WBC: 2.1",unit:"×10³/µL",ref:"4.5–11.0",dept:"Haematology",ordered:"07:30 AM",status:"critical",valClass:"low"},
+    {icon:"❤️",bg:"#fef2f2",test:"Troponin I",patient:"Ahmed Hassan",pid:"P-4826",result:"0.82",unit:"ng/mL",ref:"< 0.04",dept:"Biochemistry",ordered:"08:35 AM",status:"critical",valClass:"high"},
+    {icon:"🧪",bg:"#fff7ed",test:"Basic Metabolic Panel",patient:"Robert Chen",pid:"P-4822",result:"K+: 3.1",unit:"mEq/L",ref:"3.5–5.1",dept:"Biochemistry",ordered:"06:00 AM",status:"abnormal",valClass:"low"},
+    {icon:"💉",bg:"#fff7ed",test:"Arterial Blood Gas",patient:"David Moore",pid:"P-4828",result:"pO2: 71",unit:"mmHg",ref:"80–100",dept:"Biochemistry",ordered:"09:00 AM",status:"abnormal",valClass:"low"},
+    {icon:"🔬",bg:"#f0fdf4",test:"Urinalysis",patient:"Maria Garcia",pid:"P-4823",result:"Normal",unit:"—",ref:"Normal",dept:"Urinalysis",ordered:"08:00 AM",status:"normal",valClass:"normal"},
+    {icon:"🧫",bg:"#fefce8",test:"Blood Culture ×2",patient:"James Wilson",pid:"P-4824",result:"Pending",unit:"—",ref:"No growth",dept:"Microbiology",ordered:"06:00 AM",status:"pending",valClass:"pending"},
+    {icon:"🩺",bg:"#eff6ff",test:"Lipid Panel",patient:"Thomas Brown",pid:"P-4830",result:"LDL: 142",unit:"mg/dL",ref:"< 100",dept:"Biochemistry",ordered:"07:00 AM",status:"abnormal",valClass:"high"},
+    {icon:"🧬",bg:"#f5f3ff",test:"Thyroid Function (TSH)",patient:"Linda Foster",pid:"P-4827",result:"Pending",unit:"mIU/L",ref:"0.4–4.0",dept:"Serology",ordered:"10:00 AM",status:"pending",valClass:"pending"},
+    {icon:"🩸",bg:"#f0fdf4",test:"Haemoglobin A1c",patient:"Linda Foster",pid:"P-4827",result:"7.2",unit:"%",ref:"< 5.7",dept:"Haematology",ordered:"10:00 AM",status:"abnormal",valClass:"high"},
+    {icon:"💊",bg:"#fef2f2",test:"INR / PT",patient:"Peter Nguyen",pid:"P-4828",result:"3.8",unit:"ratio",ref:"0.8–1.2",dept:"Haematology",ordered:"07:45 AM",status:"critical",valClass:"high"},
+    {icon:"🔬",bg:"#f0fdf4",test:"Urine Culture",patient:"Emma Thompson",pid:"P-4825",result:"No growth",unit:"—",ref:"No growth",dept:"Microbiology",ordered:"08:30 AM",status:"normal",valClass:"normal"},
+    {icon:"🧪",bg:"#f0fdf4",test:"Liver Function Tests",patient:"George Hall",pid:"P-4838",result:"All normal",unit:"—",ref:"Normal",dept:"Biochemistry",ordered:"09:30 AM",status:"normal",valClass:"normal"},
+  ];
+
+  const tb=document.getElementById('lab-table');
+  labs.forEach(l=>{
+    tb.innerHTML+=`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="lab-icon-box" style="background:${l.bg}">${l.icon}</div>
+        <div><div style="font-weight:600;font-size:13px">${l.test}</div><div style="font-size:11px;color:var(--gray)">${l.dept}</div></div>
+      </div></td>
+      <td><div style="font-size:13px;font-weight:500">${l.patient}</div><div style="font-size:11px;color:var(--gray)">${l.pid}</div></td>
+      <td><div class="result-val ${l.valClass}">${l.result} <span style="font-size:11px;font-weight:400">${l.unit}</span></div></td>
+      <td><div class="ref-range">${l.ref}</div></td>
+      <td style="font-size:12px">${l.dept}</td>
+      <td style="font-size:12px;color:var(--gray)">${l.ordered}</td>
+      <td><span class="pill ${l.status}">${l.status.charAt(0).toUpperCase()+l.status.slice(1)}</span></td>
+      <td><div class="action-group"><div class="icon-btn" title="View">👁</div><div class="icon-btn" title="Print">🖨</div></div></td>
+    </tr>`;
+  });
+
+  // Critical list
+  const criticals=[
+    {name:"Sarah Mitchell — P-4821",test:"CBC: WBC critically low",val:"WBC 2.1 ×10³/µL (Ref: 4.5–11.0)"},
+    {name:"Ahmed Hassan — P-4826",test:"Troponin I critically elevated",val:"0.82 ng/mL (Ref: < 0.04)"},
+    {name:"Peter Nguyen — P-4828",test:"INR dangerously high",val:"3.8 ratio (Ref: 0.8–1.2)"},
+    {name:"Sarah Mitchell — P-4821",test:"Platelets critically low",val:"48 ×10³/µL (Ref: 150–400)"},
+    {name:"Ahmed Hassan — P-4826",test:"BNP — Heart failure marker",val:"1840 pg/mL (Ref: < 100)"},
+  ];
+  const cl=document.getElementById('critical-list');
+  criticals.forEach(c=>{
+    cl.innerHTML+=`<div class="urgent-item">
+      <div class="uname">${c.name}</div>
+      <div class="utest">${c.test}</div>
+      <div class="uval">⬆ ${c.val}</div>
+    </div>`;
+  });
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
