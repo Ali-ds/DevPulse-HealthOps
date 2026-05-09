@@ -20,6 +20,7 @@ def dashboard():
 
 app.route('/patients')
 def patients():
+    print('hello')
     return render_template('patients.html')
  
 @app.route('/emergency')
